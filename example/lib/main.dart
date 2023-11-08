@@ -1,8 +1,10 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:convert';
 
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:crypto/crypto.dart';
+import 'package:flutter/material.dart';
 import 'package:pusher_channels_flutter/pusher_channels_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyApp());
@@ -57,20 +59,20 @@ class _MyAppState extends State<MyApp> {
 
     try {
       await pusher.init(
-        apiKey: _apiKey.text,
-        cluster: _cluster.text,
-        onConnectionStateChange: onConnectionStateChange,
-        onError: onError,
-        onSubscriptionSucceeded: onSubscriptionSucceeded,
-        onEvent: onEvent,
-        onSubscriptionError: onSubscriptionError,
-        onDecryptionFailure: onDecryptionFailure,
-        onMemberAdded: onMemberAdded,
-        onMemberRemoved: onMemberRemoved,
-        onSubscriptionCount: onSubscriptionCount,
-        // authEndpoint: "<Your Authendpoint Url>",
-        // onAuthorizer: onAuthorizer
-      );
+          apiKey: 'ddf783f328575b079966', //_apiKey.text,
+          cluster: 'nono', //_cluster.text,
+          host: 'ws-mt1.pusher.com',
+          onConnectionStateChange: onConnectionStateChange,
+          onError: onError,
+          onSubscriptionSucceeded: onSubscriptionSucceeded,
+          onEvent: onEvent,
+          onSubscriptionError: onSubscriptionError,
+          onDecryptionFailure: onDecryptionFailure,
+          onMemberAdded: onMemberAdded,
+          onMemberRemoved: onMemberRemoved,
+          onSubscriptionCount: onSubscriptionCount,
+          // authEndpoint: "<Your Authendpoint Url>",
+          onAuthorizer: onAuthorizer);
       await pusher.subscribe(channelName: _channelName.text);
       await pusher.connect();
     } catch (e) {
@@ -116,13 +118,29 @@ class _MyAppState extends State<MyApp> {
     log("onSubscriptionCount: $channelName subscriptionCount: $subscriptionCount");
   }
 
+  getSignature(String value) {
+    var key = utf8.encode('1aff94a12100bf3e57fe');
+    var bytes = utf8.encode(value);
+
+    var hmacSha256 = Hmac(sha256, key); // HMAC-SHA256
+    var digest = hmacSha256.convert(bytes);
+    print("HMAC signature in string is: $digest");
+    return digest;
+  }
+
   dynamic onAuthorizer(String channelName, String socketId, dynamic options) {
     return {
-      "auth": "foo:bar",
-      "channel_data": '{"user_id": 1}',
-      "shared_secret": "foobar"
+      "auth": "ddf783f328575b079966:${getSignature("$socketId:$channelName")}",
     };
   }
+
+  //   dynamic onAuthorizer(String channelName, String socketId, dynamic options) {
+  //   return {
+  //     "auth": "foo:bar",
+  //     "channel_data": '{"user_id": 1}',
+  //     "shared_secret": "foobar"
+  //   };
+  // }
 
   void onTriggerEventPressed() async {
     var eventFormValidated = _eventFormKey.currentState!.validate();
@@ -175,27 +193,27 @@ class _MyAppState extends State<MyApp> {
                   Form(
                       key: _channelFormKey,
                       child: Column(children: <Widget>[
-                        TextFormField(
-                          controller: _apiKey,
-                          validator: (String? value) {
-                            return (value != null && value.isEmpty)
-                                ? 'Please enter your API key.'
-                                : null;
-                          },
-                          decoration:
-                              const InputDecoration(labelText: 'API Key'),
-                        ),
-                        TextFormField(
-                          controller: _cluster,
-                          validator: (String? value) {
-                            return (value != null && value.isEmpty)
-                                ? 'Please enter your cluster.'
-                                : null;
-                          },
-                          decoration: const InputDecoration(
-                            labelText: 'Cluster',
-                          ),
-                        ),
+                        // TextFormField(
+                        //   controller: _apiKey,
+                        //   validator: (String? value) {
+                        //     return (value != null && value.isEmpty)
+                        //         ? 'Please enter your API key.'
+                        //         : null;
+                        //   },
+                        //   decoration:
+                        //       const InputDecoration(labelText: 'API Key'),
+                        // ),
+                        // TextFormField(
+                        //   controller: _cluster,
+                        //   validator: (String? value) {
+                        //     return (value != null && value.isEmpty)
+                        //         ? 'Please enter your cluster.'
+                        //         : null;
+                        //   },
+                        //   decoration: const InputDecoration(
+                        //     labelText: 'Cluster',
+                        //   ),
+                        // ),
                         TextFormField(
                           controller: _channelName,
                           validator: (String? value) {
